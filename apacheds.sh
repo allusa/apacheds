@@ -6,20 +6,20 @@ function wait_for_ldap {
 	echo "Waiting for LDAP to be available "
 	c=0
 
-    ldapsearch -h localhost -p 10389 -D 'uid=admin,ou=system' -w secret ou=system;
-    
-    while [ $? -ne 0 ]; do
+
+	until nmap -Pn -p10389 localhost | awk "\$1 ~ /$PORT/ {print \$2}" | grep open; #nc -z localhost 10389;
+ 	do
         echo "LDAP not up yet... retrying... ($c/20)"
-        sleep 4
- 		
+ 		echo "Waiting for ldap"
  		if [ $c -eq 20 ]; then
  			echo "TROUBLE!!! After [${c}] retries LDAP is still dead :("
  			exit 2
  		fi
+
+ 		sleep 4
  		c=$((c+1))
-    	
-    	ldapsearch -h localhost -p 10389 -D 'uid=admin,ou=system' -w secret ou=system;
-    done 
+ 	done
+
 }
 
 if [ -f /bootstrap/config.ldif ] && [ ! -f ${APACHEDS_INSTANCE}/conf/config.ldif_migrated ]; then
